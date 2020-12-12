@@ -1,25 +1,49 @@
-import logo from './logo.svg';
-import './App.css';
+import React from "react";
+import { Header } from "./components/molecules";
+import { Route, Switch, BrowserRouter, Redirect } from "react-router-dom";
+import routes from "./config/routes";
+import { isUserAuthenticated } from "./utils/cookie";
 
-function App() {
+const PrivateRoute = ({ component: Component, ...rest }) => {
   return (
-    <div className="App">
-      <header className="App-header">
-        <img src={logo} className="App-logo" alt="logo" />
-        <p>
-          Edit <code>src/App.js</code> and save to reload.
-        </p>
-        <a
-          className="App-link"
-          href="https://reactjs.org"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          Learn React
-        </a>
-      </header>
-    </div>
+    <Route
+      {...rest}
+      render={() => {
+        if (isUserAuthenticated()) {
+          return <Component />;
+        }
+        return <Redirect to="/login" />;
+      }}
+    />
   );
-}
+};
+
+const App = () => {
+  return (
+    <BrowserRouter>
+      <Header />
+      <Switch>
+        {routes.map((route) => {
+          if (route.isPublic) {
+            return (
+              <Route
+                path={route.path}
+                component={route.component}
+                key={route.path}
+              />
+            );
+          }
+          return (
+            <PrivateRoute
+              path={route.path}
+              component={route.component}
+              key={route.path}
+            />
+          );
+        })}
+      </Switch>
+    </BrowserRouter>
+  );
+};
 
 export default App;
